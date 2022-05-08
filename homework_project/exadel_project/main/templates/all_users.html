@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{companies}} and {{clients}}</title>
+</head>
+<body>
+
+{% for company in companies %}
+    <h1>{{ company.username }}</h1>
+    <p>{{ company.company_country }}</p>
+    <p>{{ company.company_city }}</p>
+{% endfor %}
+{% for client in clients %}
+    <h1>{{ client.username }}</h1>
+    <p>{{ client.client_country }}</p>
+    <p>{{ client.client_city }}}</p>
+{% endfor %}
+
+</body>
+</html>
