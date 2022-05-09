@@ -8,7 +8,7 @@ class ClientUserAdmin(admin.ModelAdmin):
 
 
 class CompanyUserAdmin(admin.ModelAdmin):
-    list_display = ['username', 'first_name', 'last_name', 'date_create_company']
+    list_display = ['id','username', 'first_name', 'last_name', 'date_create_company']
     fields = ['username', 'password', 'title', 'description', 'company_country', 'company_city', 'company_address',
               'pay_per_hour']
 
