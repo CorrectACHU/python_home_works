@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>companies</title>
+</head>
+<body>
+
+{% for company in companies %}
+    <h1>{{ company.username }}</h1>
+    <p>{{ company.company_country }}</p>
+    <p>{{ company.company_city }}</p>
+{% endfor %}
+
+
+</body>
+</html>
