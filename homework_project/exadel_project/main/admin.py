@@ -13,9 +13,13 @@ class CompanyUserAdmin(admin.ModelAdmin):
               'pay_per_hour']
 
 
+class OrderAdmin(admin.ModelAdmin):
+    list_display = ['id', 'head', 'body']
+
+
 admin.site.register(ClientUser, ClientUserAdmin)
 admin.site.register(CompanyUser, CompanyUserAdmin)
-admin.site.register(Order)
+admin.site.register(Order,OrderAdmin)
 admin.site.register(Review)
 admin.site.register(RatingStar)
 admin.site.register(RatingCompany)

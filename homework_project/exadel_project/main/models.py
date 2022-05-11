@@ -34,16 +34,16 @@ class CompanyUser(User):
 
 class Order(models.Model):
     STATUS_CHOICE = [
-        (1, 'open'),
-        (2, 'in_process'),
-        (3, 'closed')
+        ('1', 'open'),
+        ('2', 'in_process'),
+        ('3', 'closed')
     ]
 
     client_owner = models.ForeignKey(ClientUser, on_delete=models.CASCADE)
-    companies = models.ManyToManyField(CompanyUser, related_name='possible_companies')
+    companies = models.ManyToManyField(CompanyUser, related_name='possible_companies', blank=True, null=True)
     head = models.CharField(max_length=50)
     body = models.TextField()
-    status = models.CharField(max_length=30, choices=STATUS_CHOICE, default='open')
+    status = models.CharField(max_length=30, choices=STATUS_CHOICE, default=None)
     square_in_meters = models.IntegerField()
     date_create_order = models.DateTimeField(auto_now_add=True)
 
