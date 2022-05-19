@@ -1,8 +1,18 @@
 from django.db import models
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, AbstractUser
 
 
-class ClientUser(User):
+class CustomUser(AbstractUser):
+    class Meta:
+        verbose_name = 'User'
+        verbose_name_plural = 'Users'
+
+    def __str__(self):
+        return f'{self.username}, {self.first_name}'
+
+
+class ClientUser(CustomUser):
+    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, primary_key=True, related_name='client_user')
     client_country = models.CharField(max_length=25, null=True, blank=True)
     client_city = models.CharField(max_length=30, null=True, blank=True)
     date_create_client = models.DateTimeField(auto_now_add=True)
@@ -15,7 +25,9 @@ class ClientUser(User):
         verbose_name_plural = 'Clients'
 
 
-class CompanyUser(User):
+class CompanyUser(CustomUser):
+    '''Instances of our Companies'''
+    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, primary_key=True, related_name='company_user')
     title = models.CharField(max_length=20, null=True, blank=True)
     description = models.TextField(null=True, blank=True)
     company_country = models.CharField(max_length=25, null=True, blank=True)
@@ -33,6 +45,7 @@ class CompanyUser(User):
 
 
 class Order(models.Model):
+    '''Instances of clients Orders'''
     STATUS_CHOICE = [
         ('1', 'open'),
         ('2', 'in_process'),
@@ -40,10 +53,9 @@ class Order(models.Model):
     ]
 
     client_owner = models.ForeignKey(ClientUser, on_delete=models.CASCADE)
-    companies = models.ManyToManyField(CompanyUser, related_name='possible_companies', blank=True, null=True)
     head = models.CharField(max_length=50)
     body = models.TextField()
-    status = models.CharField(max_length=30, choices=STATUS_CHOICE, default=None)
+    status = models.CharField(max_length=30, choices=STATUS_CHOICE, default='open')
     square_in_meters = models.IntegerField()
     date_create_order = models.DateTimeField(auto_now_add=True)
 
@@ -51,7 +63,14 @@ class Order(models.Model):
         return f'{self.head}'
 
 
+class Offer(models.Model):
+    '''Instances of Companies offers for clients'''
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='order_offer')
+    company = models.ForeignKey(CompanyUser, on_delete=models.CASCADE)
+
+
 class RatingStar(models.Model):
+    '''Instances of our stars for Rating model'''
     value = models.SmallIntegerField()
 
     def __str__(self):
@@ -59,7 +78,8 @@ class RatingStar(models.Model):
 
 
 class RatingCompany(models.Model):
-    company = models.ForeignKey(CompanyUser, on_delete=models.CASCADE)
+    '''Instances of company ratings'''
+    company = models.ForeignKey(CompanyUser, on_delete=models.CASCADE, related_name='evaluations')
     rating_owner = models.ForeignKey(ClientUser, on_delete=models.CASCADE)
     star_value = models.ForeignKey(RatingStar, on_delete=models.CASCADE)
     date_create_rating = models.DateTimeField(auto_now_add=True)
@@ -69,11 +89,12 @@ class RatingCompany(models.Model):
 
 
 class Review(models.Model):
-    review_owner = models.ForeignKey(ClientUser, on_delete=models.CASCADE)
-    order = models.ForeignKey(Order, on_delete=models.CASCADE)
-    rating_company = models.ForeignKey(CompanyUser, on_delete=models.CASCADE)
+    '''Instances of company reviews'''
+    review_owner = models.ForeignKey(ClientUser, on_delete=models.CASCADE, related_name='review_owner_client')
+    review_company = models.ForeignKey(CompanyUser, on_delete=models.CASCADE, related_name='review_company_getter')
+    header = models.CharField(max_length=50)
     text = models.TextField()
     date_create_review = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f'{self.review_owner} {self.rating_company}'
+        return f'{self.review_owner} {self.review_company}'

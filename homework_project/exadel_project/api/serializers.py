@@ -1,61 +1,74 @@
 from django.utils.datetime_safe import datetime
 from rest_framework import serializers
 
-from main.models import ClientUser, CompanyUser, Order
+from main.models import ClientUser, CompanyUser, Order, Offer, RatingStar, RatingCompany, Review, CustomUser
 
 
-class ClientSerializer(serializers.Serializer):
-    id = serializers.IntegerField(required=False)
-    username = serializers.CharField(required=False)
-    first_name = serializers.CharField(required=False)
-    email = serializers.EmailField(required=False)
-    client_country = serializers.CharField(required=False)
-    client_city = serializers.CharField(required=False)
-    date_create_client = serializers.DateTimeField(default=datetime.utcnow())
-
-    def create(self, validated_data):
-        return ClientUser.objects.create(**validated_data)
-
-    def update(self, instance, validated_data):
-        instance.username = validated_data.get('username', instance.username)
-        instance.first_name = validated_data.get('first_name', instance.first_name)
-        instance.email = validated_data.get('email', instance.email)
-        instance.client_country = validated_data.get('client_country', instance.client_country)
-        instance.client_city = validated_data.get('client_city', instance.client_city)
-        instance.save()
-        return instance
+class CustomUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = ['username', 'first_name', 'last_name', 'is_active', 'is_superuser']
 
 
-class CompanySerializer(serializers.Serializer):
-    id = serializers.IntegerField()
-    username = serializers.CharField()
-    title = serializers.CharField()
-    description = serializers.CharField(max_length=1000)
-    email = serializers.EmailField()
-    company_country = serializers.CharField()
-    company_city = serializers.CharField()
-    pay_per_hour = serializers.DecimalField(max_digits=4, decimal_places=2)
-    date_create_company = serializers.DateTimeField()
+class ClientSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ClientUser
+        fields = ['user', 'client_country', 'client_city']
 
 
-class OrderSerializer(serializers.Serializer):
-    id = serializers.IntegerField(required=False)
-    client_owner = ClientSerializer(serializers.PrimaryKeyRelatedField(queryset=ClientUser.objects.all()), required=False)
-    head = serializers.CharField(max_length=50, required=False)
-    body = serializers.CharField(required=False)
-    status = serializers.CharField(required=False)
-    square_in_meters = serializers.IntegerField(required=False)
-    date_create_order = serializers.DateTimeField(default=datetime.utcnow())
+class RatingStarSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RatingStar
+        fields = '__all__'
 
-    def create(self, validated_data):
-        return Order.objects.create(**validated_data)
 
-    def update(self, instance, validated_data):
-        instance.client_owner = validated_data.get('client_owner', instance.client_owner)
-        instance.head = validated_data.get('head', instance.head)
-        instance.body = validated_data.get('body', instance.body)
-        instance.status = validated_data.get('status', instance.status)
-        instance.square_in_meters = validated_data.get('square_in_meters', instance.square_in_meters)
-        instance.save()
-        return instance
+class RatingCompanySerializer(serializers.ModelSerializer):
+    company = serializers.PrimaryKeyRelatedField(queryset=CompanyUser.objects.all())
+    rating_owner = serializers.PrimaryKeyRelatedField(queryset=ClientUser.objects.all())
+    star_value = serializers.PrimaryKeyRelatedField(queryset=RatingStar.objects.all())
 
+    class Meta:
+        model = RatingCompany
+        fields = '__all__'
+
+
+class CompanySerializer(serializers.ModelSerializer):
+    evaluations = RatingCompanySerializer(many=True, read_only=True)
+
+    class Meta:
+        model = CompanyUser
+        fields = [
+            'id',
+            'evaluations',
+            'username',
+            'email',
+            'description',
+            'title',
+            'company_country',
+            'company_city',
+            'company_address',
+            'pay_per_hour'
+        ]
+
+
+class OfferSerializer(serializers.ModelSerializer):
+    company = CompanySerializer(read_only=True)
+
+    class Meta:
+        model = Offer
+        fields = '__all__'
+
+
+class OrderSerializer(serializers.ModelSerializer):
+    order_offer = OfferSerializer(many=True, read_only=True)
+    client_owner = serializers.PrimaryKeyRelatedField(queryset=ClientUser.objects.all())
+
+    class Meta:
+        model = Order
+        exclude = ['status']
+
+
+class ReviewSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Review
+        fields = '__all__'

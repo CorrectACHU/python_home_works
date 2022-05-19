@@ -33,6 +33,7 @@ class CompaniesView(View):
 
 class AllUsersView(View):
     def get(self, request):
+        # print((request.user.is_anonymous))
         companies = CompanyUser.objects.all().order_by('-company_city')
         clients = ClientUser.objects.all().order_by('-date_create_client')
         context = {
