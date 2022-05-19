@@ -1,18 +1,35 @@
 from django.shortcuts import render
-from rest_framework import generics, status
-
-from .serializers import ClientSerializer, CompanySerializer, OrderSerializer
-from main.models import ClientUser, CompanyUser, Order
-from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from rest_framework import generics, status, permissions, viewsets, views
+from .permissions import ClientPermissionOrReadOnly, ClientPermission
+from .serializers import ClientSerializer, \
+    CompanySerializer, \
+    OrderSerializer, \
+    OfferSerializer, \
+    RatingCompanySerializer, \
+    ReviewSerializer, \
+    CustomUserSerializer
+from main.models import ClientUser, CompanyUser, Order, Offer, RatingCompany, Review, CustomUser
+from .services import StandardResultsSetPagination
+
+
+class CustomUserViewset(viewsets.ModelViewSet):
+    serializer_class = CustomUserSerializer
+    queryset = CustomUser.objects.all()
 
 
 class ListClientsView(generics.ListCreateAPIView):
     queryset = ClientUser.objects.all()
     serializer_class = ClientSerializer
+    permission_classes = [ClientPermissionOrReadOnly]
 
 
-class ListCompaniesView(generics.ListAPIView):
+class DetailClientView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = ClientUser.objects.all()
+    serializer_class = ClientSerializer
+
+
+class ListCompaniesView(generics.ListCreateAPIView):
     queryset = CompanyUser.objects.all()
     serializer_class = CompanySerializer
 
@@ -22,33 +39,45 @@ class DetailCompaniesView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = CompanySerializer
 
 
-@api_view(['GET', 'POST'])
-def api_orders_list(request):
-    if request.method == 'GET':
-        orders = Order.objects.all()
-        serializer = OrderSerializer(orders, many=True)
-        return Response(serializer.data)
+class ListOrderView(generics.ListAPIView):
+    queryset = Order.objects.all()
+    serializer_class = OrderSerializer
 
 
-@api_view(['GET', 'PUT', 'DELETE'])
-def api_order_detail(request, pk):
-    try:
-        order = Order.objects.select_related('client_owner').get(pk=pk)
-    except:
-        return Response(status=status.HTTP_404_NOT_FOUND)
-
-    if request.method == 'GET':
-        serializer = OrderSerializer(order)
-        return Response(serializer.data)
+class CreateOrderView(generics.CreateAPIView):
+    queryset = Order.objects.all()
+    serializer_class = OrderSerializer
 
 
-    elif request.method == 'PUT':
-        serializer = OrderSerializer(order, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+class DetailOrderView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Order.objects.all()
+    serializer_class = OrderSerializer
 
-    elif request.method == 'DELETE':
-        order.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+
+class ListOfferView(generics.ListCreateAPIView):
+    queryset = Offer.objects.all()
+    serializer_class = OfferSerializer
+
+
+class CreateRatingView(generics.CreateAPIView):
+    queryset = RatingCompany.objects.all()
+    serializer_class = RatingCompanySerializer
+    pagination_class = StandardResultsSetPagination
+
+
+class ListReviewView(generics.ListCreateAPIView):
+    queryset = Review.objects.all()
+    serializer_class = ReviewSerializer
+    pagination_class = StandardResultsSetPagination
+
+
+class DetailReviewView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Review.objects.all()
+    serializer_class = ReviewSerializer
+
+# class ViewApi(views.APIView):
+#     def get(self, request):
+#         queryset = ClientUser.objects.all()
+#         serializer = ClientSerializer(queryset, many=True)
+#         print((request.user.client_user))
+#         return Response(serializer.data)
