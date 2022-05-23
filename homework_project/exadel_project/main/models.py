@@ -2,32 +2,33 @@ from django.db import models
 from django.contrib.auth.models import User, AbstractUser
 
 
-class CustomUser(AbstractUser):
-    class Meta:
-        verbose_name = 'User'
-        verbose_name_plural = 'Users'
+class Profile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True, related_name='profile')
+    is_client = models.BooleanField(default=False)
 
     def __str__(self):
-        return f'{self.username}, {self.first_name}'
+        return f'{self.user.username}'
 
 
-class ClientUser(CustomUser):
-    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, primary_key=True, related_name='client_user')
+class ClientUser(models.Model):
+    user = models.OneToOneField(Profile, on_delete=models.CASCADE, primary_key=True, related_name='client')
     client_country = models.CharField(max_length=25, null=True, blank=True)
     client_city = models.CharField(max_length=30, null=True, blank=True)
+    address = models.CharField(max_length=25)
+    rating = models.IntegerField(default=0)
     date_create_client = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f'{self.username}'
+        return f'{self.user.user.username}'
 
     class Meta:
         verbose_name = 'Client'
         verbose_name_plural = 'Clients'
 
 
-class CompanyUser(CustomUser):
+class CompanyUser(models.Model):
     '''Instances of our Companies'''
-    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, primary_key=True, related_name='company_user')
+    user = models.OneToOneField(Profile, on_delete=models.CASCADE, primary_key=True, related_name='company')
     title = models.CharField(max_length=20, null=True, blank=True)
     description = models.TextField(null=True, blank=True)
     company_country = models.CharField(max_length=25, null=True, blank=True)

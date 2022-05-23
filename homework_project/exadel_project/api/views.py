@@ -1,21 +1,16 @@
-from django.shortcuts import render
+from django.contrib.auth.models import User
+from rest_framework import generics, permissions, views
 from rest_framework.response import Response
-from rest_framework import generics, status, permissions, viewsets, views
+from django.db.models.fields import related_descriptors
 from .permissions import ClientPermissionOrReadOnly, ClientPermission
 from .serializers import ClientSerializer, \
     CompanySerializer, \
     OrderSerializer, \
     OfferSerializer, \
     RatingCompanySerializer, \
-    ReviewSerializer, \
-    CustomUserSerializer
-from main.models import ClientUser, CompanyUser, Order, Offer, RatingCompany, Review, CustomUser
+    ReviewSerializer, ComapnyRegisterSerializer
+from main.models import ClientUser, CompanyUser, Order, Offer, RatingCompany, Review
 from .services import StandardResultsSetPagination
-
-
-class CustomUserViewset(viewsets.ModelViewSet):
-    serializer_class = CustomUserSerializer
-    queryset = CustomUser.objects.all()
 
 
 class ListClientsView(generics.ListCreateAPIView):
@@ -27,11 +22,17 @@ class ListClientsView(generics.ListCreateAPIView):
 class DetailClientView(generics.RetrieveUpdateDestroyAPIView):
     queryset = ClientUser.objects.all()
     serializer_class = ClientSerializer
+    permission_classes = [ClientPermissionOrReadOnly]
 
 
 class ListCompaniesView(generics.ListCreateAPIView):
     queryset = CompanyUser.objects.all()
     serializer_class = CompanySerializer
+
+
+class CreateCompaniesView(generics.CreateAPIView):
+    queryset = CompanyUser.objects.all()
+    serializer_class = ComapnyRegisterSerializer
 
 
 class DetailCompaniesView(generics.RetrieveUpdateDestroyAPIView):
@@ -42,11 +43,13 @@ class DetailCompaniesView(generics.RetrieveUpdateDestroyAPIView):
 class ListOrderView(generics.ListAPIView):
     queryset = Order.objects.all()
     serializer_class = OrderSerializer
+    permission_classes = [ClientPermissionOrReadOnly]
 
 
 class CreateOrderView(generics.CreateAPIView):
     queryset = Order.objects.all()
     serializer_class = OrderSerializer
+    permission_classes = [ClientPermissionOrReadOnly]
 
 
 class DetailOrderView(generics.RetrieveUpdateDestroyAPIView):
@@ -75,9 +78,10 @@ class DetailReviewView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
 
-# class ViewApi(views.APIView):
-#     def get(self, request):
-#         queryset = ClientUser.objects.all()
-#         serializer = ClientSerializer(queryset, many=True)
-#         print((request.user.client_user))
-#         return Response(serializer.data)
+
+class ViewApi(views.APIView):
+    def get(self, request):
+        queryset = ClientUser.objects.all()
+        serializer = ClientSerializer(queryset, many=True)
+        print(request.user.client)
+        return Response(serializer.data)

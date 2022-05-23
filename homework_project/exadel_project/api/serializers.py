@@ -1,13 +1,36 @@
-from django.utils.datetime_safe import datetime
+from django.contrib.auth.models import User
 from rest_framework import serializers
 
-from main.models import ClientUser, CompanyUser, Order, Offer, RatingStar, RatingCompany, Review, CustomUser
+from main.models import ClientUser, CompanyUser, Order, Offer, RatingStar, RatingCompany, Review, Profile
 
 
-class CustomUserSerializer(serializers.ModelSerializer):
+class UserRegisterSerializer(serializers.ModelSerializer):
+    password2 = serializers.CharField()
+
     class Meta:
-        model = CustomUser
-        fields = ['username', 'first_name', 'last_name', 'is_active', 'is_superuser']
+        model = User
+        fields = ['username', 'password', 'password2', 'email', ]
+
+    def save(self, *args, **kwargs):
+        user = User(
+            email=self.validated_data['email'],
+            username=self.validated_data['username'],
+        )
+        password = self.validated_data['password']
+        password2 = self.validated_data['password2']
+        if password != password2:
+            raise serializers.ValidationError({password: 'Пароль не совпадает'})
+        user.set_password(password)
+        user.save()
+        return user
+
+
+class ProfileRegisterSerializer(serializers.ModelSerializer):
+    user = UserRegisterSerializer()
+
+    class Meta:
+        model = Profile
+        fields = '__all__'
 
 
 class ClientSerializer(serializers.ModelSerializer):
@@ -33,15 +56,25 @@ class RatingCompanySerializer(serializers.ModelSerializer):
 
 
 class CompanySerializer(serializers.ModelSerializer):
-    evaluations = RatingCompanySerializer(many=True, read_only=True)
+    class Meta:
+        model = CompanyUser
+        fields = [
+            'description',
+            'title',
+            'company_country',
+            'company_city',
+            'company_address',
+            'pay_per_hour'
+        ]
+
+
+class ComapnyRegisterSerializer(serializers.ModelSerializer):
+    user = ProfileRegisterSerializer()
 
     class Meta:
         model = CompanyUser
         fields = [
-            'id',
-            'evaluations',
-            'username',
-            'email',
+            'user',
             'description',
             'title',
             'company_country',
