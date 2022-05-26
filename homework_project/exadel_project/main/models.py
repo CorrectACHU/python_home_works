@@ -66,8 +66,8 @@ class Order(models.Model):
 
 class Offer(models.Model):
     '''Instances of Companies offers for clients'''
-    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='order_offer')
-    company = models.ForeignKey(CompanyUser, on_delete=models.CASCADE)
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='order_id')
+    company = models.ForeignKey(CompanyUser, on_delete=models.CASCADE, related_name='company_id')
 
 
 class RatingStar(models.Model):

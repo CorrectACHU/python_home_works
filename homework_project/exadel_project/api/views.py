@@ -1,28 +1,39 @@
-from django.contrib.auth.models import User
+from django.db import models
 from rest_framework import generics, permissions, views
+from django.contrib.auth.models import User
 from rest_framework.response import Response
-from django.db.models.fields import related_descriptors
 from .permissions import ClientPermissionOrReadOnly, ClientPermission
-from .serializers import ClientSerializer, \
-    CompanySerializer, \
-    OrderSerializer, \
-    OfferSerializer, \
-    RatingCompanySerializer, \
-    ReviewSerializer, ComapnyRegisterSerializer
-from main.models import ClientUser, CompanyUser, Order, Offer, RatingCompany, Review
+from .serializers import (
+    UserSerializer,
+    UserSerializerList,
+    CompanySerializer,
+    ComapnyRegisterSerializer,
+    OrderSerializer,
+    OfferSerializer,
+    ReviewSerializer,
+    RatingCompanySerializer)
+from main.models import (
+    ClientUser,
+    CompanyUser,
+    Order,
+    Offer,
+    RatingCompany,
+    Review,
+    Profile)
 from .services import StandardResultsSetPagination
 
 
-class ListClientsView(generics.ListCreateAPIView):
-    queryset = ClientUser.objects.all()
-    serializer_class = ClientSerializer
-    permission_classes = [ClientPermissionOrReadOnly]
+class ClientRegisterView(generics.CreateAPIView):
+    serializer_class = UserSerializer
+
+    def get_queryset(self,request,*args,**kwargs):
+        client = User.objects.annotate(is_client=True)
+        return client
 
 
-class DetailClientView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = ClientUser.objects.all()
-    serializer_class = ClientSerializer
-    permission_classes = [ClientPermissionOrReadOnly]
+class UserViewList(generics.ListAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializerList
 
 
 class ListCompaniesView(generics.ListCreateAPIView):
@@ -77,11 +88,3 @@ class ListReviewView(generics.ListCreateAPIView):
 class DetailReviewView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
-
-
-class ViewApi(views.APIView):
-    def get(self, request):
-        queryset = ClientUser.objects.all()
-        serializer = ClientSerializer(queryset, many=True)
-        print(request.user.client)
-        return Response(serializer.data)

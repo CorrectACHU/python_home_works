@@ -4,39 +4,28 @@ from rest_framework import serializers
 from main.models import ClientUser, CompanyUser, Order, Offer, RatingStar, RatingCompany, Review, Profile
 
 
-class UserRegisterSerializer(serializers.ModelSerializer):
-    password2 = serializers.CharField()
+class UserSerializer(serializers.ModelSerializer):
+    is_client = serializers.BooleanField(allow_null=True)
+    password = serializers.CharField(
+        style={'input_type': 'password'}, help_text="пароль", label="Password", write_only=True,
+    )
 
-    class Meta:
-        model = User
-        fields = ['username', 'password', 'password2', 'email', ]
-
-    def save(self, *args, **kwargs):
-        user = User(
-            email=self.validated_data['email'],
-            username=self.validated_data['username'],
-        )
-        password = self.validated_data['password']
-        password2 = self.validated_data['password2']
-        if password != password2:
-            raise serializers.ValidationError({password: 'Пароль не совпадает'})
-        user.set_password(password)
+    def create(self, validated_data):
+        user = super(UserSerializer, self).create(validated_data=validated_data)
+        user.set_password(validated_data["password"])
+        user.is_client = validated_data["is_client"]
         user.save()
         return user
 
-
-class ProfileRegisterSerializer(serializers.ModelSerializer):
-    user = UserRegisterSerializer()
-
     class Meta:
-        model = Profile
+        model = User
+        fields = ['username', 'password', 'email', 'is_client']
+
+
+class UserSerializerList(serializers.ModelSerializer):
+    class Meta:
+        model = User
         fields = '__all__'
-
-
-class ClientSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ClientUser
-        fields = ['user', 'client_country', 'client_city']
 
 
 class RatingStarSerializer(serializers.ModelSerializer):
@@ -69,7 +58,6 @@ class CompanySerializer(serializers.ModelSerializer):
 
 
 class ComapnyRegisterSerializer(serializers.ModelSerializer):
-    user = ProfileRegisterSerializer()
 
     class Meta:
         model = CompanyUser

@@ -6,15 +6,17 @@ class ClientPermissionOrReadOnly(permissions.IsAuthenticatedOrReadOnly):
 
     def has_permission(self, request, view):
         if request.method in self.SAFE_METHODS:
-            return bool(True)
+            return True
         elif request.user.is_authenticated:
             return bool(
                 request.user.profile.is_client
             )
         else:
-            return bool(False)
+            return False
 
 
 class ClientPermission(permissions.IsAuthenticated):
     def has_permission(self, request, view):
-        return bool(request.user.profile.is_client and request.user.is_authenticated)
+        if request.user.is_authenticated:
+            return bool(request.user.profile.is_client and request.user.is_authenticated)
+        return False
