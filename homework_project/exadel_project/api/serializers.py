@@ -1,30 +1,22 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
 
-from main.models import ClientUser, CompanyUser, Order, Offer, RatingStar, RatingCompany, Review, Profile
+from main.models import ClientUser, CompanyUser, Order, Offer, RatingStar, RatingCompany, Comment
 
 
-class UserSerializer(serializers.ModelSerializer):
-    is_client = serializers.BooleanField(allow_null=True)
-    password = serializers.CharField(
-        style={'input_type': 'password'}, help_text="пароль", label="Password", write_only=True,
-    )
+class ClientUserSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
-        user = super(UserSerializer, self).create(validated_data=validated_data)
-        user.set_password(validated_data["password"])
-        user.is_client = validated_data["is_client"]
+        user = User.objects.create(**validated_data['user'])
+        user.set_password(validated_data['user']["password"])
         user.save()
-        return user
+        validated_data['user'] = user
+        client = super(ClientUserSerializer, self).create(validated_data=validated_data)
+        client.save()
+        return client
 
     class Meta:
-        model = User
-        fields = ['username', 'password', 'email', 'is_client']
-
-
-class UserSerializerList(serializers.ModelSerializer):
-    class Meta:
-        model = User
+        model = ClientUser
         fields = '__all__'
 
 
@@ -52,13 +44,11 @@ class CompanySerializer(serializers.ModelSerializer):
             'title',
             'company_country',
             'company_city',
-            'company_address',
             'pay_per_hour'
         ]
 
 
 class ComapnyRegisterSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = CompanyUser
         fields = [
@@ -89,7 +79,3 @@ class OrderSerializer(serializers.ModelSerializer):
         exclude = ['status']
 
 
-class ReviewSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Review
-        fields = '__all__'

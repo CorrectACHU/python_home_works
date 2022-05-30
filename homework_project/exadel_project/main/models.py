@@ -1,25 +1,18 @@
 from django.db import models
-from django.contrib.auth.models import User, AbstractUser
-
-
-class Profile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True, related_name='profile')
-    is_client = models.BooleanField(default=False)
-
-    def __str__(self):
-        return f'{self.user.username}'
+from django.contrib.auth.models import User
 
 
 class ClientUser(models.Model):
-    user = models.OneToOneField(Profile, on_delete=models.CASCADE, primary_key=True, related_name='client')
+    profile = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True, related_name='client')
+    nick = models.CharField(max_length=30, null=True, blank=True)
+    name = models.CharField(max_length=30, null=True, blank=True)
     client_country = models.CharField(max_length=25, null=True, blank=True)
     client_city = models.CharField(max_length=30, null=True, blank=True)
-    address = models.CharField(max_length=25)
-    rating = models.IntegerField(default=0)
     date_create_client = models.DateTimeField(auto_now_add=True)
+    is_client = models.BooleanField(default=True)
 
     def __str__(self):
-        return f'{self.user.user.username}'
+        return f'{self.nick}'
 
     class Meta:
         verbose_name = 'Client'
@@ -28,7 +21,7 @@ class ClientUser(models.Model):
 
 class CompanyUser(models.Model):
     '''Instances of our Companies'''
-    user = models.OneToOneField(Profile, on_delete=models.CASCADE, primary_key=True, related_name='company')
+    profile = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True, related_name='company')
     title = models.CharField(max_length=20, null=True, blank=True)
     description = models.TextField(null=True, blank=True)
     company_country = models.CharField(max_length=25, null=True, blank=True)
@@ -36,6 +29,7 @@ class CompanyUser(models.Model):
     company_address = models.CharField(max_length=100, null=True, blank=True)
     pay_per_hour = models.DecimalField(max_digits=4, decimal_places=2, null=True, blank=True)
     date_create_company = models.DateTimeField(auto_now_add=True)
+    is_company = models.BooleanField(default=True)
 
     def __str__(self):
         return f'{self.title}'
@@ -56,8 +50,12 @@ class Order(models.Model):
     client_owner = models.ForeignKey(ClientUser, on_delete=models.CASCADE)
     head = models.CharField(max_length=50)
     body = models.TextField()
-    status = models.CharField(max_length=30, choices=STATUS_CHOICE, default='open')
+    country = models.CharField(max_length=25, null=True, blank=True)
+    city = models.CharField(max_length=30, null=True, blank=True)
+    street = models.CharField(max_length=30, null=True, blank=True)
+    house_door = models.CharField(max_length=30, null=True, blank=True)
     square_in_meters = models.IntegerField()
+    status = models.CharField(max_length=30, choices=STATUS_CHOICE, default='open')
     date_create_order = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -80,8 +78,8 @@ class RatingStar(models.Model):
 
 class RatingCompany(models.Model):
     '''Instances of company ratings'''
-    company = models.ForeignKey(CompanyUser, on_delete=models.CASCADE, related_name='evaluations')
-    rating_owner = models.ForeignKey(ClientUser, on_delete=models.CASCADE)
+    company = models.ForeignKey(CompanyUser, on_delete=models.CASCADE, related_name='evaluations', null=True)
+    client = models.ForeignKey(ClientUser, on_delete=models.CASCADE, related_name='rating_owner', null=True)
     star_value = models.ForeignKey(RatingStar, on_delete=models.CASCADE)
     date_create_rating = models.DateTimeField(auto_now_add=True)
 
@@ -89,13 +87,13 @@ class RatingCompany(models.Model):
         return f'{self.rating_owner} {self.company} {self.star_value}'
 
 
-class Review(models.Model):
+class Comment(models.Model):
     '''Instances of company reviews'''
-    review_owner = models.ForeignKey(ClientUser, on_delete=models.CASCADE, related_name='review_owner_client')
-    review_company = models.ForeignKey(CompanyUser, on_delete=models.CASCADE, related_name='review_company_getter')
+    client_id = models.ForeignKey(ClientUser, on_delete=models.CASCADE, related_name='comment_owner', null=True, blank=True)
+    company_id = models.ForeignKey(CompanyUser, on_delete=models.CASCADE, related_name='reviews', null=True, blank=True)
     header = models.CharField(max_length=50)
     text = models.TextField()
     date_create_review = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f'{self.review_owner} {self.review_company}'
+        return f'{self.client_id} {self.company_id}'
