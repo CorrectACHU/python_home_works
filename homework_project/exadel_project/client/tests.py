@@ -6,6 +6,8 @@ from rest_framework.test import APITestCase, APIClient
 from main.models import ClientUser, CompanyUser
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
+from .tasks import count_clients
+
 
 class ClientTest(APITestCase):
     def setUp(self):
@@ -26,9 +28,9 @@ class ClientTest(APITestCase):
         self.client2 = ClientUser.objects.create(profile=self.user2, nick='B1a1')
         self.client2.save()
 
-        self.company1 = CompanyUser.objects.create(profile=self.user3, title='CleanF')
+        self.company1 = CompanyUser.objects.create(profile_id=self.user3, title='CleanF')
         self.company1.save()
-        self.company2 = CompanyUser.objects.create(profile=self.user4, title='CoF')
+        self.company2 = CompanyUser.objects.create(profile_id=self.user4, title='CoF')
         self.company2.save()
 
     def test_create_client(self):
@@ -55,7 +57,7 @@ class ClientTest(APITestCase):
         response = client.post(
             reverse('company-register'),
             data={
-                'profile': {
+                'profile_id': {
                     'username': 'CompanyFast',
                     'password': 'Eachother1',
                     'email': 'jabsssss@gmail.com'
@@ -83,8 +85,12 @@ class ClientTest(APITestCase):
             reverse('add-comment'),
             data={
                 'client_id': self.client1.profile.id,
-                'company_id': self.company1.profile.id,
+                'company_id': self.company1.profile_id.id,
                 'header': "It's me ad my comment",
                 'text': "Hello, it's a nice company"
             })
         self.assertEqual(response.status_code, 201)
+
+    def test_celery(self):
+        s = count_clients
+        self.assertEqual(s(), (2, 'ssssssssssssssssssss'))

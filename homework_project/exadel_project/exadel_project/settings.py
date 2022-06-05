@@ -33,7 +33,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'drf_yasg',
     'rest_framework_simplejwt',
-    "debug_toolbar",
+    'debug_toolbar',
+    'django_celery_results',
 ]
 
 MIDDLEWARE = [
@@ -157,18 +158,24 @@ SIMPLE_JWT = {
 }
 
 SWAGGER_SETTINGS = {
-   'SECURITY_DEFINITIONS': {
-      'Basic': {
+    'SECURITY_DEFINITIONS': {
+        'Basic': {
             'type': 'basic'
-      },
-      'Bearer': {
+        },
+        'Bearer': {
             'type': 'apiKey',
             'name': 'Authorization',
             'in': 'header'
-      }
-   }
+        }
+    }
 }
 
 INTERNAL_IPS = [
     "127.0.0.1",
 ]
+
+# CELERY_RESULT_BACKEND = 'amqp://admin:admin@localhost:5672/admin'
+CELERY_BROKER_URL = 'amqp://admin:admin@localhost:5672/admin'
+CELERY_TIMEZONE = "Australia/Tasmania"
+CELERY_TASK_TRACK_STARTED = True
+CELERY_TASK_TIME_LIMIT = 30 * 60

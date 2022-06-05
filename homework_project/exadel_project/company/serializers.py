@@ -1,9 +1,22 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
 
-from main.models import CompanyUser, Comment
+from main.models import (
+    CompanyUser,
+    Comment,
+    Order,
+    Offer
+)
 
-from main.serializers import UserSerializer
+
+class UserSerializerCompany(serializers.ModelSerializer):
+    password = serializers.CharField(
+        style={'input_type': 'password'}, help_text="пароль", label="Password", write_only=True,
+    )
+
+    class Meta:
+        model = User
+        fields = ['username', 'password', 'email']
 
 
 class CommentSerializer(serializers.ModelSerializer):
@@ -17,22 +30,29 @@ class CommentSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class OrdersSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Order
+        exclude = ['notified_companies', 'status']
+
+
 class CompanyDetailSerializer(serializers.ModelSerializer):
     reviews = CommentSerializer(read_only=True, many=True)
+    orders = OrdersSerializer(read_only=True, many=True)
 
     class Meta:
         model = CompanyUser
-        fields = '__all__'
+        exclude = ['is_company', 'date_create_company']
 
 
 class CompanyCreateSerializer(serializers.ModelSerializer):
-    profile = UserSerializer()
+    profile_id = UserSerializerCompany()
 
     def create(self, validated_data):
-        profile = User.objects.create(**validated_data['profile'])
-        profile.set_password(validated_data['profile']["password"])
-        profile.save()
-        validated_data['profile'] = profile
+        profile_id = User.objects.create(**validated_data['profile_id'])
+        profile_id.set_password(validated_data['profile_id']["password"])
+        profile_id.save()
+        validated_data['profile_id'] = profile_id
         company = super(CompanyCreateSerializer, self).create(validated_data=validated_data)
         company.save()
         return company
@@ -43,7 +63,22 @@ class CompanyCreateSerializer(serializers.ModelSerializer):
 
 
 class CompanySerializer(serializers.ModelSerializer):
-
     class Meta:
         model = CompanyUser
         fields = ['title', 'company_country', 'pay_per_hour']
+
+
+class CreateOfferSerializer(serializers.ModelSerializer):
+    price = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
+
+    class Meta:
+        model = Offer
+        exclude = ['company']
+
+
+class OfferDetailSerializer(serializers.ModelSerializer):
+    company = serializers.SlugRelatedField(slug_field='title', read_only=True)
+
+    class Meta:
+        model = Offer
+        exclude = ['order']

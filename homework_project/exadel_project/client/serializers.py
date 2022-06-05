@@ -1,13 +1,27 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
 
-from main.models import ClientUser, Comment, CompanyUser
+from main.models import (
+    ClientUser,
+    Comment,
+    CompanyUser,
+    Order,
+    Offer,
+)
 
-from main.serializers import UserSerializer
+
+class UserSerializerClient(serializers.ModelSerializer):
+    password = serializers.CharField(
+        style={'input_type': 'password'}, help_text="пароль", label="Password", write_only=True,
+    )
+
+    class Meta:
+        model = User
+        fields = ['username', 'password', 'email']
 
 
 class ClientDetailSerializer(serializers.ModelSerializer):
-    profile = UserSerializer()
+    profile = UserSerializerClient()
 
     def create(self, validated_data):
         profile = User.objects.create(**validated_data['profile'])
@@ -43,4 +57,27 @@ class CommentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Comment
+        fields = '__all__'
+
+
+class CreateOrderSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Order
+        exclude = ('client_owner', 'status')
+
+
+class OfferDetailSerializer(serializers.ModelSerializer):
+    price = serializers.IntegerField(read_only=True)
+    company = serializers.SlugRelatedField(slug_field='title', read_only=True)
+
+    class Meta:
+        model = Offer
+        exclude = ['order']
+
+
+class OrderSerializer(serializers.ModelSerializer):
+    offer_id = OfferDetailSerializer(many=True)
+
+    class Meta:
+        model = Order
         fields = '__all__'

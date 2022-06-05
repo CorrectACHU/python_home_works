@@ -21,7 +21,7 @@ class ClientUser(models.Model):
 
 class CompanyUser(models.Model):
     '''Instances of our Companies'''
-    profile = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True, related_name='company')
+    profile_id = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True, related_name='company')
     title = models.CharField(max_length=20, null=True, blank=True)
     description = models.TextField(null=True, blank=True)
     company_country = models.CharField(max_length=25, null=True, blank=True)
@@ -48,6 +48,7 @@ class Order(models.Model):
     ]
 
     client_owner = models.ForeignKey(ClientUser, on_delete=models.CASCADE)
+    notified_companies = models.ManyToManyField(CompanyUser, related_name='orders')
     head = models.CharField(max_length=50)
     body = models.TextField()
     country = models.CharField(max_length=25, null=True, blank=True)
@@ -64,8 +65,12 @@ class Order(models.Model):
 
 class Offer(models.Model):
     '''Instances of Companies offers for clients'''
-    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='order_id')
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='offer_id')
     company = models.ForeignKey(CompanyUser, on_delete=models.CASCADE, related_name='company_id')
+    price = models.IntegerField(null=True, blank=True)
+
+    def __str__(self):
+        return f'order:{self.order.head}////  Company:{self.company.title}'
 
 
 class RatingStar(models.Model):
@@ -89,7 +94,8 @@ class RatingCompany(models.Model):
 
 class Comment(models.Model):
     '''Instances of company reviews'''
-    client_id = models.ForeignKey(ClientUser, on_delete=models.CASCADE, related_name='comment_owner', null=True, blank=True)
+    client_id = models.ForeignKey(ClientUser, on_delete=models.CASCADE, related_name='comment_owner', null=True,
+                                  blank=True)
     company_id = models.ForeignKey(CompanyUser, on_delete=models.CASCADE, related_name='reviews', null=True, blank=True)
     header = models.CharField(max_length=50)
     text = models.TextField()
