@@ -3,19 +3,29 @@ from rest_framework import permissions
 SAFE_METHODS = ('GET', 'HEAD', 'OPTIONS')
 
 
-class CompanyProfileOnly(permissions.BasePermission):
-    def has_permission(self, request, view):
-        return (
-                request.user.is_authenticated
-                and hasattr(request.user, "company")
-                and request.user.id == request.parser_context['kwargs']['pk']
-        )
+class ForUpdateCompanyOnly(permissions.BasePermission):
+    def has_object_permission(self, request, view, obj):
+        if hasattr(request.user, "company") and obj.profile_id == request.user:
+            return True
 
 
-class CompanyOrReadOnly(permissions.BasePermission):
+class IsCompanyOrReadOnly(permissions.BasePermission):
+    def has_object_permission(self, request, view, obj):
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        elif hasattr(request.user, "company"):
+            return obj.profile_id.id == request.user.id
+        return False
+
+
+class IsCompanyProfileOnly(permissions.BasePermission):
     def has_permission(self, request, view):
-        return bool(
-            request.method in SAFE_METHODS or
-            hasattr(request.user, "company")
-            and request.user.company.is_company
-        )
+        if hasattr(request.user, "company") and hasattr(request.user.company, "is_company"):
+            return True
+        return False
+
+    def has_object_permission(self, request, view, obj):
+
+        if hasattr(request.user, "company") and hasattr(request.user.company, "is_company"):
+            return obj.company.profile_id.id == request.user.id
+        return False

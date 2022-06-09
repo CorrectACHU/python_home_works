@@ -55,7 +55,7 @@ class ClientTest(APITestCase):
     def test_create_company(self):
         client = APIClient()
         response = client.post(
-            reverse('company-register'),
+            reverse('register-company'),
             data={
                 'profile_id': {
                     'username': 'CompanyFast',
@@ -84,7 +84,7 @@ class ClientTest(APITestCase):
         response = client.post(
             reverse('add-comment'),
             data={
-                'client_id': self.client1.profile.id,
+                'client_owner': self.client1.profile.id,
                 'company_id': self.company1.profile_id.id,
                 'header': "It's me ad my comment",
                 'text': "Hello, it's a nice company"

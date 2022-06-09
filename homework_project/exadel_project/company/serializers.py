@@ -9,14 +9,15 @@ from main.models import (
 )
 
 
-class UserSerializerCompany(serializers.ModelSerializer):
+class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(
         style={'input_type': 'password'}, help_text="пароль", label="Password", write_only=True,
     )
 
     class Meta:
         model = User
-        fields = ['username', 'password', 'email']
+        fields = ['id', 'username', 'password', 'email']
+        ref_name = 'UserCompany'
 
 
 class CommentSerializer(serializers.ModelSerializer):
@@ -28,25 +29,33 @@ class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
         fields = '__all__'
+        ref_name = 'CommentCompany'
 
 
 class OrdersSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
-        exclude = ['notified_companies', 'status']
+        exclude = ['notified_companies', 'client_owner', 'accepted_offer']
 
 
 class CompanyDetailSerializer(serializers.ModelSerializer):
+    avg_rating = serializers.IntegerField(read_only=True)
     reviews = CommentSerializer(read_only=True, many=True)
-    orders = OrdersSerializer(read_only=True, many=True)
+    title = serializers.CharField(read_only=True)
+    company_country = serializers.CharField(read_only=True)
+    description = serializers.CharField(read_only=True)
+    company_city = serializers.CharField(read_only=True)
 
     class Meta:
         model = CompanyUser
-        exclude = ['is_company', 'date_create_company']
+        fields = [
+            'title', 'description', 'company_country', 'company_city', 'date_create_company', 'pay_per_hour', 'reviews',
+            'avg_rating'
+        ]
 
 
 class CompanyCreateSerializer(serializers.ModelSerializer):
-    profile_id = UserSerializerCompany()
+    profile_id = UserSerializer()
 
     def create(self, validated_data):
         profile_id = User.objects.create(**validated_data['profile_id'])
@@ -68,12 +77,21 @@ class CompanySerializer(serializers.ModelSerializer):
         fields = ['title', 'company_country', 'pay_per_hour']
 
 
-class CreateOfferSerializer(serializers.ModelSerializer):
+class OfferListSerializer(serializers.ModelSerializer):
+    order = serializers.SlugRelatedField(slug_field='head', read_only=True)
     price = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
 
     class Meta:
         model = Offer
-        exclude = ['company']
+        fields = ['order', 'price', 'is_accepted']
+
+
+class OfferCreateSerializer(serializers.ModelSerializer):
+    price = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
+
+    class Meta:
+        model = Offer
+        exclude = ['company', 'is_accepted']
 
 
 class OfferDetailSerializer(serializers.ModelSerializer):
@@ -82,3 +100,4 @@ class OfferDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Offer
         exclude = ['order']
+        ref_name = 'OfferCompany'
