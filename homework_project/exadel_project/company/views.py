@@ -6,7 +6,7 @@ from rest_framework.response import Response
 
 from main.models import CompanyUser, Offer, Order
 
-from .permissions import IsCompanyOrReadOnly, IsCompanyProfileOnly, ForUpdateCompanyOnly
+from .permissions import IsCompanyProfileOnly, ForUpdateCompanyOnly
 from .serializers import (
     CompanyDetailSerializer,
     CompanyCreateSerializer,

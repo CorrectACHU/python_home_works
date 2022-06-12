@@ -13,14 +13,12 @@ from main.models import (
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
-from .permissions import IsClientProfileOnly, IsClient, IsClientOrReadOnly, IsOwnerOrReadOnly
+from .permissions import IsClient, IsOwnerOrReadOnly
 from .serializers import (
     ClientDetailSerializer,
     CommentCreateSerializer,
-    CommentSerializer,
     OrderCreateSerializer,
     OrderDetailSerializer,
-    OfferDetailSerializer,
     CompanyListSerializer,
     CompanyDetailSerializer,
     OrderListSerializer,
@@ -56,13 +54,6 @@ class CreateCommentView(generics.CreateAPIView):
     def perform_create(self, serializer):
         user = User.objects.get(id=self.request.user.id)
         serializer.save(client_owner=ClientUser.objects.get(profile=user))
-
-
-class CommentView(generics.ListAPIView):
-    """ Presenting comments """
-    queryset = Comment.objects.all()
-    serializer_class = CommentSerializer
-    permission_classes = [AllowAny]
 
 
 class CompanyListView(generics.ListAPIView):

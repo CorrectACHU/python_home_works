@@ -1,4 +1,3 @@
-from celery import shared_task
 from main.models import ClientUser
 
 from exadel_project.celery import app
