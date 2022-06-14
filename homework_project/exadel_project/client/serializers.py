@@ -54,11 +54,10 @@ class CommentCreateSerializer(serializers.ModelSerializer):
 
 
 class CommentSerializer(serializers.ModelSerializer):
-    company_id = serializers.SlugRelatedField(slug_field='nick', read_only=True)
 
     class Meta:
         model = Comment
-        exclude = ['client_owner']
+        exclude = ['company_id' ,'client_owner']
         ref_name = 'CommentClient'
 
 
@@ -123,7 +122,7 @@ class AnswerToOfferSerializer(serializers.ModelSerializer):
     head = serializers.CharField(read_only=True)
     body = serializers.CharField(read_only=True)
     offer_id = OfferDetailSerializer(many=True, read_only=True)
-    accepted_offer = serializers.IntegerField()
+    accepted_offer = serializers.CharField()
     square_in_meters = serializers.IntegerField(read_only=True)
     status = serializers.CharField(read_only=True)
 

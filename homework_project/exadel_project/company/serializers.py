@@ -38,6 +38,15 @@ class OrdersSerializer(serializers.ModelSerializer):
         exclude = ['notified_companies', 'client_owner', 'accepted_offer']
 
 
+class OrderSerializer(serializers.ModelSerializer):
+    client_owner = serializers.SlugRelatedField(slug_field='nick', read_only=True)
+
+    class Meta:
+        model = Order
+        fields = ['id', 'client_owner', 'head', 'body']
+        ref_name = 'OrderCompany'
+
+
 class CompanyDetailSerializer(serializers.ModelSerializer):
     avg_rating = serializers.IntegerField(read_only=True)
     reviews = CommentSerializer(read_only=True, many=True)
@@ -45,12 +54,13 @@ class CompanyDetailSerializer(serializers.ModelSerializer):
     company_country = serializers.CharField(read_only=True)
     description = serializers.CharField(read_only=True)
     company_city = serializers.CharField(read_only=True)
+    orders = OrderSerializer(read_only=True, many=True)
 
     class Meta:
         model = CompanyUser
         fields = [
             'title', 'description', 'company_country', 'company_city', 'date_create_company', 'pay_per_hour', 'reviews',
-            'avg_rating'
+            'avg_rating', 'orders'
         ]
 
 

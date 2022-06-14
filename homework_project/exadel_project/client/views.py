@@ -140,20 +140,22 @@ class AnswerToOfferView(generics.UpdateAPIView):
         obj = self.get_object()
         accepted_offers = [offer for offer in obj.offer_id.all() if offer.is_accepted == True]
         list_with_offers_id = [str(offer.id) for offer in obj.offer_id.all()]
-        exists_accepted_offer = obj.offer_id.get(id=request.data['accepted_offer']).is_accepted
+
+        print(list_with_offers_id)
 
         if obj.status == 'closed':
             return Response('This order is already closed!', status=status.HTTP_400_BAD_REQUEST)
 
+        if not request.data['accepted_offer'] in list_with_offers_id:
+            return Response('This object does not exists.', status=status.HTTP_400_BAD_REQUEST)
+
+        exists_accepted_offer = obj.offer_id.get(id=request.data['accepted_offer']).is_accepted
         if exists_accepted_offer == True:
             return Response('You already answered that way.', status=status.HTTP_400_BAD_REQUEST)
 
         if len(accepted_offers) > 0:
             c = Offer.objects.filter(id=accepted_offers[0].id)
             c.update(is_accepted=False)
-
-        if not request.data['accepted_offer'] in list_with_offers_id:
-            return Response('This object does not exists.', status=status.HTTP_400_BAD_REQUEST)
 
         offer = Offer.objects.filter(id=int(self.request.data['accepted_offer']))
         offer.update(is_accepted=True)
