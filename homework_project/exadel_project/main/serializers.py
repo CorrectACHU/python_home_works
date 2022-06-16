@@ -1,12 +1,11 @@
-from django.contrib.auth.models import User
 from rest_framework import serializers
+from .models import Order
 
 
-class UserSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(
-        style={'input_type': 'password'}, help_text="пароль", label="Password", write_only=True,
-    )
+class OrderListSerializer(serializers.ModelSerializer):
+    client_owner = serializers.SlugRelatedField(slug_field='nick', read_only=True)
 
     class Meta:
-        model = User
-        fields = ['username', 'password', 'email']
+        model = Order
+        exclude = ['notified_companies', 'street', 'house_door', 'status', 'accepted_offer']
+        ref_name = 'OrderForAny'

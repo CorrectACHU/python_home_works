@@ -11,7 +11,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-c@a!=ltr0$h&m(l7v_4cd2*$71#xw)shz$31(b*)zi7s9c_cx)'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 
@@ -29,12 +29,10 @@ INSTALLED_APPS = [
     'company',
     'main',
 
-    'django_extensions',
+    'django_filters',
     'rest_framework',
     'drf_yasg',
     'rest_framework_simplejwt',
-    'debug_toolbar',
-    'django_celery_results',
 ]
 
 MIDDLEWARE = [
@@ -45,7 +43,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    "debug_toolbar.middleware.DebugToolbarMiddleware",
 ]
 
 ROOT_URLCONF = 'exadel_project.urls'
@@ -118,6 +115,9 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 REST_FRAMEWORK = {
+    'DEFAULT_FILTER_BACKENDS': (
+        'django_filters.rest_framework.DjangoFilterBackend',
+    ),
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
     'PAGE_SIZE': 10,
     'DEFAULT_AUTHENTICATION_CLASSES': (
@@ -170,12 +170,4 @@ SWAGGER_SETTINGS = {
     }
 }
 
-INTERNAL_IPS = [
-    "127.0.0.1",
-]
 
-# CELERY_RESULT_BACKEND = 'amqp://admin:admin@localhost:5672/admin'
-CELERY_BROKER_URL = 'amqp://admin:admin@localhost:5672/admin'
-CELERY_TIMEZONE = "Australia/Tasmania"
-CELERY_TASK_TRACK_STARTED = True
-CELERY_TASK_TIME_LIMIT = 30 * 60

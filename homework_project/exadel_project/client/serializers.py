@@ -7,21 +7,23 @@ from main.models import (
     CompanyUser,
     Order,
     Offer,
+    RatingCompany
 )
 
 
-class UserSerializerClient(serializers.ModelSerializer):
+class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(
         style={'input_type': 'password'}, help_text="пароль", label="Password", write_only=True,
     )
 
     class Meta:
         model = User
-        fields = ['username', 'password', 'email']
+        fields = ['id', 'username', 'password', 'email']
+        ref_name = 'UserClient'
 
 
 class ClientDetailSerializer(serializers.ModelSerializer):
-    profile = UserSerializerClient()
+    profile = UserSerializer()
 
     def create(self, validated_data):
         profile = User.objects.create(**validated_data['profile'])
@@ -43,27 +45,26 @@ class ClientSerializer(serializers.ModelSerializer):
         fields = ['profile']
 
 
-class CreateReviewSerializer(serializers.ModelSerializer):
-    client_id = serializers.PrimaryKeyRelatedField(queryset=ClientUser.objects.all())
+class CommentCreateSerializer(serializers.ModelSerializer):
     company_id = serializers.PrimaryKeyRelatedField(queryset=CompanyUser.objects.all())
 
     class Meta:
         model = Comment
-        fields = '__all__'
+        exclude = ['client_owner']
 
 
 class CommentSerializer(serializers.ModelSerializer):
-    # client_id = serializers.SlugRelatedField(slug_field='profile',read_only=True)
 
     class Meta:
         model = Comment
-        fields = '__all__'
+        exclude = ['company_id' ,'client_owner']
+        ref_name = 'CommentClient'
 
 
-class CreateOrderSerializer(serializers.ModelSerializer):
+class OrderCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
-        exclude = ('client_owner', 'status')
+        exclude = ('client_owner', 'status', 'accepted_offer')
 
 
 class OfferDetailSerializer(serializers.ModelSerializer):
@@ -73,11 +74,74 @@ class OfferDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Offer
         exclude = ['order']
+        ref_name = 'OfferClient'
 
 
-class OrderSerializer(serializers.ModelSerializer):
+class OrderListSerializer(serializers.ModelSerializer):
     offer_id = OfferDetailSerializer(many=True)
 
     class Meta:
         model = Order
-        fields = '__all__'
+        fields = ['id', 'head', 'status', 'date_create_order', 'offer_id']
+
+
+class OrderDetailSerializer(serializers.ModelSerializer):
+    offer_id = OfferDetailSerializer(many=True, read_only=True)
+    accepted_offer = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        model = Order
+        fields = ['id', 'head', 'body', 'accepted_offer', 'notified_companies', 'offer_id']
+
+
+class CompanyListSerializer(serializers.ModelSerializer):
+    profile_id = serializers.SlugRelatedField(slug_field='id', read_only=True)
+    avg_rating = serializers.IntegerField()
+
+    class Meta:
+        model = CompanyUser
+        fields = ['profile_id', 'title', 'pay_per_hour', 'avg_rating']
+
+
+class CompanyDetailSerializer(serializers.ModelSerializer):
+    rating_client = serializers.BooleanField()
+    avg_rating = serializers.IntegerField()
+    reviews = CommentSerializer(read_only=True, many=True)
+
+    class Meta:
+        model = CompanyUser
+        fields = [
+            'title', 'description', 'company_country', 'company_city', 'date_create_company', 'reviews',
+            'rating_client',
+            'avg_rating'
+        ]
+        ref_name = 'CompanySerializerClient'
+
+
+class AnswerToOfferSerializer(serializers.ModelSerializer):
+    head = serializers.CharField(read_only=True)
+    body = serializers.CharField(read_only=True)
+    offer_id = OfferDetailSerializer(many=True, read_only=True)
+    accepted_offer = serializers.CharField()
+    square_in_meters = serializers.IntegerField(read_only=True)
+    status = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = Order
+        exclude = ['client_owner', 'notified_companies', 'country', 'city', 'street', 'house_door']
+
+
+class CloseOrderSerializer(serializers.ModelSerializer):
+    status = serializers.BooleanField(help_text='Do you want to close the order?', write_only=True)
+    head = serializers.CharField(read_only=True)
+    body = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = Order
+        fields = ['id', 'head', 'body', 'status']
+
+
+class AddRatingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RatingCompany
+        exclude = ('client_owner',)
