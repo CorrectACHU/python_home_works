@@ -28,14 +28,11 @@ INSTALLED_APPS = [
     'client',
     'company',
     'main',
+
     'django_filters',
-    'crispy_forms',
-    'django_extensions',
     'rest_framework',
     'drf_yasg',
     'rest_framework_simplejwt',
-    'debug_toolbar',
-    'django_celery_results',
 ]
 
 MIDDLEWARE = [
@@ -46,7 +43,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    "debug_toolbar.middleware.DebugToolbarMiddleware",
 ]
 
 ROOT_URLCONF = 'exadel_project.urls'
@@ -174,12 +170,4 @@ SWAGGER_SETTINGS = {
     }
 }
 
-INTERNAL_IPS = [
-    "127.0.0.1",
-]
 
-# CELERY_RESULT_BACKEND = 'amqp://admin:admin@localhost:5672/admin'
-CELERY_BROKER_URL = 'amqp://admin:admin@localhost:5672/admin'
-CELERY_TIMEZONE = "Australia/Tasmania"
-CELERY_TASK_TRACK_STARTED = True
-CELERY_TASK_TIME_LIMIT = 30 * 60
