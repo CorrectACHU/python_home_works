@@ -3,7 +3,7 @@ from rest_framework import permissions
 SAFE_METHODS = ('GET', 'HEAD', 'OPTIONS')
 
 
-class ClientProfileOnly(permissions.BasePermission):
+class IsClientProfileOnly(permissions.BasePermission):
     def has_permission(self, request, view):
         return (
                 request.user.is_authenticated
@@ -12,7 +12,7 @@ class ClientProfileOnly(permissions.BasePermission):
         )
 
 
-class ClientOrReadOnly(permissions.BasePermission):
+class IsClientOrReadOnly(permissions.BasePermission):
     def has_permission(self, request, view):
         return bool(
             request.method in SAFE_METHODS or
@@ -27,3 +27,12 @@ class IsClient(permissions.BasePermission):
             hasattr(request.user, "client") and
             request.user.client.is_client
         )
+
+
+class IsOwnerOrReadOnly(permissions.BasePermission):
+    def has_object_permission(self, request, view, obj):
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        elif hasattr(request.user, "client"):
+            return obj.client_owner.profile.id == request.user.id
+        return False
